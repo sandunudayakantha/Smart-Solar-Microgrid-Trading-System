@@ -1,0 +1,1072 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solara Grid — Operations Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0F1C;
+    --surface:#111A2C;
+    --surface-2:#16223A;
+    --line:#233149;
+    --text:#E7ECF6;
+    --text-muted:#8C99B3;
+    --text-dim:#5B6883;
+    --solar:#F5A524;
+    --solar-dim:#7A5A22;
+    --grid:#2FD9C4;
+    --grid-dim:#1B6E64;
+    --danger:#F0567D;
+    --danger-dim:#5C2536;
+    --radius:3px;
+    --mono:'IBM Plex Mono', monospace;
+    --sans:'IBM Plex Sans', sans-serif;
+  }
+  :root:not([data-theme="light"]){ }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F3F4F7;
+      --surface:#FFFFFF;
+      --surface-2:#EDEFF4;
+      --line:#DADFE8;
+      --text:#131A29;
+      --text-muted:#5B6577;
+      --text-dim:#8C93A3;
+    }
+  }
+  :root[data-theme="light"]{
+    --bg:#F3F4F7;
+    --surface:#FFFFFF;
+    --surface-2:#EDEFF4;
+    --line:#DADFE8;
+    --text:#131A29;
+    --text-muted:#5B6577;
+    --text-dim:#8C93A3;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    font-size:14px;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  ::selection{ background:var(--solar); color:#0A0F1C; }
+
+  /* ---------- LOGIN VIEW ---------- */
+  #login-view{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+    background:
+      radial-gradient(ellipse 900px 500px at 15% 20%, rgba(245,165,36,0.08), transparent),
+      radial-gradient(ellipse 900px 600px at 85% 80%, rgba(47,217,196,0.07), transparent),
+      var(--bg);
+  }
+  .login-box{
+    width:100%;
+    max-width:400px;
+  }
+  .brand-mark{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:40px;
+  }
+  .brand-mark .bolt{
+    width:30px; height:30px;
+    display:grid; place-items:center;
+    background:var(--solar);
+    border-radius:2px;
+  }
+  .brand-mark .bolt svg{ width:16px; height:16px; }
+  .brand-mark span{
+    font-size:15px;
+    font-weight:600;
+    letter-spacing:0.02em;
+  }
+  .brand-mark .tag{
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:11px;
+    margin-left:2px;
+  }
+  h1.login-title{
+    font-size:26px;
+    font-weight:600;
+    line-height:1.3;
+    margin-bottom:8px;
+    letter-spacing:-0.01em;
+  }
+  .login-sub{
+    color:var(--text-muted);
+    font-size:13.5px;
+    margin-bottom:32px;
+    line-height:1.5;
+  }
+  .field{ margin-bottom:16px; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--text-muted);
+    margin-bottom:6px;
+  }
+  .field input, .field select{
+    width:100%;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:11px 12px;
+    border-radius:var(--radius);
+    font-family:var(--sans);
+    font-size:14px;
+    outline:none;
+    transition:border-color .15s;
+  }
+  .field input:focus, .field select:focus{
+    border-color:var(--solar);
+  }
+  .role-switch{
+    display:flex;
+    gap:8px;
+    margin-bottom:24px;
+  }
+  .role-switch button{
+    flex:1;
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    padding:9px 8px;
+    border-radius:var(--radius);
+    font-family:var(--sans);
+    font-size:12.5px;
+    cursor:pointer;
+    transition:all .15s;
+  }
+  .role-switch button.active{
+    border-color:var(--solar);
+    color:var(--solar);
+    background:rgba(245,165,36,0.08);
+  }
+  .btn-primary{
+    width:100%;
+    background:var(--solar);
+    color:#1A1204;
+    border:none;
+    padding:12px;
+    border-radius:var(--radius);
+    font-family:var(--sans);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+    transition:filter .15s;
+  }
+  .btn-primary:hover{ filter:brightness(1.08); }
+  .login-foot{
+    margin-top:20px;
+    font-size:12px;
+    color:var(--text-dim);
+    text-align:center;
+  }
+
+  /* ---------- APP SHELL ---------- */
+  #app-view{ display:none; min-height:100vh; }
+  #app-view.show{ display:flex; }
+
+  .sidebar{
+    width:220px;
+    flex-shrink:0;
+    background:var(--surface);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    padding:18px 0;
+    position:sticky;
+    top:0;
+    height:100vh;
+    overflow-y:auto;
+  }
+  .sidebar .brand-mark{ margin:0 18px 26px; }
+  .nav-section-label{
+    padding:0 18px;
+    color:var(--text-dim);
+    font-size:10.5px;
+    letter-spacing:0.06em;
+    margin:18px 0 8px;
+  }
+  .nav-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:9px 18px;
+    color:var(--text-muted);
+    cursor:pointer;
+    font-size:13.5px;
+    border-left:2px solid transparent;
+    transition:all .12s;
+  }
+  .nav-item:hover{ color:var(--text); background:var(--surface-2); }
+  .nav-item.active{
+    color:var(--text);
+    background:var(--surface-2);
+    border-left-color:var(--solar);
+  }
+  .nav-item svg{ width:16px; height:16px; opacity:0.85; flex-shrink:0; }
+  .nav-badge{
+    margin-left:auto;
+    background:var(--danger-dim);
+    color:var(--danger);
+    font-family:var(--mono);
+    font-size:10.5px;
+    padding:1px 6px;
+    border-radius:10px;
+  }
+  .sidebar-foot{
+    margin-top:auto;
+    padding:14px 18px 4px;
+    border-top:1px solid var(--line);
+  }
+  .user-chip{
+    display:flex;
+    align-items:center;
+    gap:9px;
+  }
+  .user-chip .avatar{
+    width:30px; height:30px;
+    border-radius:50%;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    display:grid; place-items:center;
+    font-size:12px;
+    font-weight:600;
+    color:var(--grid);
+  }
+  .user-chip .who{ line-height:1.3; }
+  .user-chip .who .name{ font-size:12.5px; font-weight:500; }
+  .user-chip .who .role{ font-size:11px; color:var(--text-dim); font-family:var(--mono); }
+  .logout-link{
+    display:block;
+    margin-top:10px;
+    font-size:11.5px;
+    color:var(--text-dim);
+    cursor:pointer;
+  }
+  .logout-link:hover{ color:var(--danger); }
+
+  .main{ flex:1; min-width:0; }
+  .topbar{
+    height:56px;
+    border-bottom:1px solid var(--line);
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 28px;
+    background:var(--bg);
+    position:sticky;
+    top:0;
+    z-index:5;
+  }
+  .topbar h2{ font-size:15px; font-weight:600; }
+  .topbar .crumb{ color:var(--text-dim); font-size:12px; margin-top:2px; font-family:var(--mono); }
+  .topbar-right{ display:flex; align-items:center; gap:14px; }
+  .live-dot{
+    display:flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:11px; color:var(--text-muted);
+  }
+  .live-dot .dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--grid);
+    box-shadow:0 0 0 0 rgba(47,217,196,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{ box-shadow:0 0 0 0 rgba(47,217,196,0.5); }
+    70%{ box-shadow:0 0 0 6px rgba(47,217,196,0); }
+    100%{ box-shadow:0 0 0 0 rgba(47,217,196,0); }
+  }
+
+  .content{ padding:26px 28px 60px; max-width:1200px; }
+  .view-panel{ display:none; }
+  .view-panel.active{ display:block; }
+
+  /* stat cards */
+  .stat-row{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-card .label{
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin-bottom:10px;
+  }
+  .stat-card .value{
+    font-family:var(--mono);
+    font-size:26px;
+    font-weight:600;
+    letter-spacing:-0.02em;
+  }
+  .stat-card .value .unit{
+    font-size:13px;
+    color:var(--text-dim);
+    margin-left:4px;
+    font-weight:400;
+  }
+  .stat-card .delta{
+    font-size:11px;
+    margin-top:6px;
+    font-family:var(--mono);
+  }
+  .delta.up{ color:var(--grid); }
+  .delta.warn{ color:var(--solar); }
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    margin-bottom:20px;
+  }
+  .panel-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:14px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .panel-head h3{ font-size:13.5px; font-weight:600; }
+  .panel-head .sub{ font-size:11.5px; color:var(--text-dim); margin-top:2px; }
+  .panel-body{ padding:4px 0; }
+  .panel-body.pad{ padding:16px 18px; }
+
+  table{ width:100%; border-collapse:collapse; font-size:13px; }
+  th{
+    text-align:left;
+    color:var(--text-dim);
+    font-weight:500;
+    font-size:11px;
+    padding:10px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  td{
+    padding:11px 18px;
+    border-bottom:1px solid var(--line);
+    color:var(--text);
+  }
+  tr:last-child td{ border-bottom:none; }
+  tbody tr{ transition:background .1s; }
+  tbody tr:hover{ background:var(--surface-2); }
+  .mono{ font-family:var(--mono); font-size:12.5px; color:var(--text-muted); }
+
+  .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:5px;
+    font-family:var(--mono);
+    font-size:10.5px;
+    padding:3px 8px;
+    border-radius:10px;
+  }
+  .badge.ok{ background:rgba(47,217,196,0.12); color:var(--grid); }
+  .badge.pending{ background:rgba(245,165,36,0.12); color:var(--solar); }
+  .badge.off{ background:rgba(140,153,179,0.12); color:var(--text-muted); }
+  .badge.danger{ background:var(--danger-dim); color:var(--danger); }
+
+  .btn-sm{
+    background:transparent;
+    border:1px solid var(--line);
+    color:var(--text-muted);
+    padding:5px 10px;
+    border-radius:var(--radius);
+    font-size:11.5px;
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+  .btn-sm:hover{ border-color:var(--text-dim); color:var(--text); }
+  .btn-sm.accent{ border-color:var(--solar-dim); color:var(--solar); }
+  .btn-sm.accent:hover{ border-color:var(--solar); }
+  .btn-sm.danger{ border-color:var(--danger-dim); color:var(--danger); }
+  .btn-sm.danger:hover{ border-color:var(--danger); }
+  .row-actions{ display:flex; gap:6px; }
+
+  .toolbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+    gap:12px;
+    flex-wrap:wrap;
+  }
+  .search-input{
+    background:var(--surface);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:8px 12px;
+    border-radius:var(--radius);
+    font-size:12.5px;
+    width:240px;
+    font-family:var(--sans);
+    outline:none;
+  }
+  .search-input:focus{ border-color:var(--solar); }
+  .filter-chips{ display:flex; gap:6px; }
+  .chip{
+    padding:6px 12px;
+    border:1px solid var(--line);
+    border-radius:14px;
+    font-size:11.5px;
+    color:var(--text-muted);
+    cursor:pointer;
+  }
+  .chip.active{ border-color:var(--grid); color:var(--grid); background:rgba(47,217,196,0.08); }
+
+  .btn-add{
+    background:var(--solar);
+    color:#1A1204;
+    border:none;
+    padding:9px 16px;
+    border-radius:var(--radius);
+    font-size:12.5px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+
+  .two-col{ display:grid; grid-template-columns:1.5fr 1fr; gap:20px; }
+  @media (max-width:900px){ .two-col{ grid-template-columns:1fr; } .stat-row{ grid-template-columns:repeat(2,1fr); } }
+
+  .node-list-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:12px 18px;
+    border-bottom:1px solid var(--line);
+  }
+  .node-list-item:last-child{ border-bottom:none; }
+  .node-info .name{ font-size:13px; font-weight:500; }
+  .node-info .loc{ font-size:11px; color:var(--text-dim); font-family:var(--mono); margin-top:2px; }
+  .node-cap{ text-align:right; }
+  .node-cap .kw{ font-family:var(--mono); font-size:13px; color:var(--grid); }
+  .node-cap .slots{ font-size:10.5px; color:var(--text-dim); }
+
+  /* form */
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px; }
+  .form-grid .full{ grid-column:1/-1; }
+  .form-field label{ display:block; font-size:11.5px; color:var(--text-muted); margin-bottom:6px; }
+  .form-field input, .form-field select{
+    width:100%;
+    background:var(--bg);
+    border:1px solid var(--line);
+    color:var(--text);
+    padding:9px 11px;
+    border-radius:var(--radius);
+    font-size:13px;
+    font-family:var(--sans);
+    outline:none;
+  }
+  .form-field input:focus, .form-field select:focus{ border-color:var(--grid); }
+  .rule-note{
+    display:flex;
+    gap:8px;
+    align-items:flex-start;
+    background:rgba(245,165,36,0.06);
+    border:1px solid var(--solar-dim);
+    border-radius:var(--radius);
+    padding:10px 12px;
+    font-size:11.5px;
+    color:var(--text-muted);
+    margin-bottom:16px;
+    line-height:1.5;
+  }
+  .rule-note b{ color:var(--solar); }
+
+  /* QR panel */
+  .qr-mock{
+    width:140px; height:140px;
+    background:
+      repeating-linear-gradient(90deg, var(--text) 0 6px, transparent 6px 12px),
+      repeating-linear-gradient(0deg, var(--text) 0 6px, transparent 6px 12px);
+    background-blend-mode:screen;
+    opacity:0.9;
+    border-radius:4px;
+    margin:0 auto 14px;
+  }
+  .scan-frame{
+    border:1px dashed var(--grid-dim);
+    border-radius:var(--radius);
+    padding:24px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:12px;
+  }
+
+  ::-webkit-scrollbar{ width:10px; height:10px; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:6px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login-view">
+  <div class="login-box">
+    <div class="brand-mark">
+      <div class="bolt">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#1A1204"/></svg>
+      </div>
+      <span>Solara Grid</span>
+      <span class="tag">/ ops console</span>
+    </div>
+    <h1 class="login-title">Sign in to your workspace</h1>
+    <p class="login-sub">Manage microgrid nodes, prosumer accounts and energy slot reservations.</p>
+
+    <div class="role-switch">
+      <button class="active" data-role="backoffice" onclick="setLoginRole(this,'backoffice')">Backoffice</button>
+      <button data-role="operator" onclick="setLoginRole(this,'operator')">Grid Operator</button>
+    </div>
+
+    <div class="field">
+      <label>Username</label>
+      <input type="text" id="login-user" value="a.perera" placeholder="username">
+    </div>
+    <div class="field">
+      <label>Password</label>
+      <input type="password" value="••••••••" placeholder="password">
+    </div>
+    <button class="btn-primary" onclick="doLogin()">Sign in</button>
+    <p class="login-foot">Prototype build — no data leaves this page</p>
+  </div>
+</div>
+
+<!-- ================= APP SHELL ================= -->
+<div id="app-view">
+  <aside class="sidebar">
+    <div class="brand-mark">
+      <div class="bolt">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" fill="#1A1204"/></svg>
+      </div>
+      <span>Solara Grid</span>
+    </div>
+
+    <div id="nav-backoffice">
+      <div class="nav-section-label">OVERVIEW</div>
+      <div class="nav-item active" data-view="dash" onclick="setView('dash',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-section-label">ADMINISTRATION</div>
+      <div class="nav-item" data-view="prosumers" onclick="setView('prosumers',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.2"/><path d="M4 20c1.5-4 5-6 8-6s6.5 2 8 6"/></svg>
+        Prosumers
+        <span class="nav-badge">3</span>
+      </div>
+      <div class="nav-item" data-view="nodes" onclick="setView('nodes',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+        Microgrid Nodes
+      </div>
+      <div class="nav-item" data-view="webusers" onclick="setView('webusers',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>
+        Web Users
+      </div>
+      <div class="nav-section-label">OPERATIONS</div>
+      <div class="nav-item" data-view="reservations" onclick="setView('reservations',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        Reservations
+      </div>
+    </div>
+
+    <div id="nav-operator" style="display:none;">
+      <div class="nav-section-label">OVERVIEW</div>
+      <div class="nav-item active" data-view="dash-op" onclick="setView('dash-op',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        Dashboard
+      </div>
+      <div class="nav-section-label">FIELD OPS</div>
+      <div class="nav-item" data-view="reservations-op" onclick="setView('reservations-op',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+        Reservations
+      </div>
+      <div class="nav-item" data-view="qr" onclick="setView('qr',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 14h2M14 19h2M19 19h2"/></svg>
+        Verify QR &amp; Finalize
+      </div>
+      <div class="nav-item" data-view="battery" onclick="setView('battery',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
+        Battery Slots
+      </div>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar" id="avatar-init">AP</div>
+        <div class="who">
+          <div class="name" id="chip-name">A. Perera</div>
+          <div class="role" id="chip-role">backoffice</div>
+        </div>
+      </div>
+      <div class="logout-link" onclick="doLogout()">Sign out</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div>
+        <h2 id="topbar-title">Dashboard</h2>
+        <div class="crumb" id="topbar-crumb">solara-grid / overview</div>
+      </div>
+      <div class="topbar-right">
+        <div class="live-dot"><span class="dot"></span> LIVE · 08 nodes reporting</div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div class="view-panel" id="view-dash">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="label">Active nodes</div>
+            <div class="value">8<span class="unit">/ 9</span></div>
+            <div class="delta up">▲ all reporting normally</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Pending reservations</div>
+            <div class="value">14</div>
+            <div class="delta warn">5 need review within 12h</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Approved — next 7 days</div>
+            <div class="value">37</div>
+            <div class="delta up">▲ 12% vs last week</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Pending deactivations</div>
+            <div class="value">3</div>
+            <div class="delta warn">awaiting backoffice action</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>Reservation queue</h3>
+                <div class="sub">Slots awaiting confirmation</div>
+              </div>
+              <button class="btn-sm" onclick="setView('reservations', document.querySelector('[data-view=reservations]'))">View all</button>
+            </div>
+            <div class="panel-body">
+              <table>
+                <thead><tr><th>Prosumer</th><th>Node</th><th>Scheduled</th><th>Status</th></tr></thead>
+                <tbody>
+                  <tr><td>H. Fernando <span class="mono">951xxxxxxxV</span></td><td>Kilinochchi-North</td><td class="mono">Sep 21, 14:00</td><td><span class="badge pending">pending</span></td></tr>
+                  <tr><td>N. Silva <span class="mono">882xxxxxxxV</span></td><td>Jaffna-Hub-2</td><td class="mono">Sep 20, 09:30</td><td><span class="badge pending">pending</span></td></tr>
+                  <tr><td>R. Kumar <span class="mono">970xxxxxxxV</span></td><td>Vavuniya-East</td><td class="mono">Sep 22, 16:00</td><td><span class="badge ok">approved</span></td></tr>
+                  <tr><td>S. Jayasuriya <span class="mono">915xxxxxxxV</span></td><td>Kilinochchi-North</td><td class="mono">Sep 19, 11:00</td><td><span class="badge danger">expiring</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div><h3>Node capacity</h3><div class="sub">Live battery availability</div></div>
+            </div>
+            <div class="panel-body">
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Kilinochchi-North</div><div class="loc">9.3961°N, 80.3986°E</div></div>
+                <div class="node-cap"><div class="kw">42.5 kW/h</div><div class="slots">6/8 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Jaffna-Hub-2</div><div class="loc">9.6685°N, 80.0074°E</div></div>
+                <div class="node-cap"><div class="kw">30.0 kW/h</div><div class="slots">2/6 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Vavuniya-East</div><div class="loc">8.7514°N, 80.4971°E</div></div>
+                <div class="node-cap"><div class="kw">55.0 kW/h</div><div class="slots">8/10 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Mannar-Coastal</div><div class="loc">8.9810°N, 79.9044°E</div></div>
+                <div class="node-cap"><div class="kw">18.0 kW/h</div><div class="slots">0/4 slots free</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== GRID OPERATOR DASHBOARD (own use cases: manage reservations, update battery slots, verify/finalize) ===== -->
+      <div class="view-panel" id="view-dash-op">
+        <div class="stat-row">
+          <div class="stat-card">
+            <div class="label">Assigned nodes</div>
+            <div class="value">4</div>
+            <div class="delta up">▲ all reporting normally</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Reservations to review</div>
+            <div class="value">6</div>
+            <div class="delta warn">2 expiring within 12h</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Approved today</div>
+            <div class="value">11</div>
+            <div class="delta up">▲ on schedule</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Transfers finalized</div>
+            <div class="value">5</div>
+            <div class="delta up">via QR verification</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head">
+              <div>
+                <h3>My reservation queue</h3>
+                <div class="sub">Create, modify or cancel — 7-day / 12h rule applies</div>
+              </div>
+              <button class="btn-sm" onclick="setView('reservations-op', document.querySelector('#nav-operator [data-view=reservations-op]'))">Manage all</button>
+            </div>
+            <div class="panel-body">
+              <table>
+                <thead><tr><th>Prosumer</th><th>Node</th><th>Scheduled</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>H. Fernando</td><td>Kilinochchi-North</td><td class="mono">Sep 21, 14:00</td><td><span class="badge pending">pending</span></td>
+                    <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+                  <tr><td>N. Silva</td><td>Jaffna-Hub-2</td><td class="mono">Sep 20, 09:30</td><td><span class="badge pending">pending</span></td>
+                    <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+                  <tr><td>S. Jayasuriya</td><td>Kilinochchi-North</td><td class="mono">Sep 19, 11:00</td><td><span class="badge danger">&lt;12h — locked</span></td>
+                    <td class="row-actions"><button class="btn-sm" disabled style="opacity:.4;">Modify</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div><h3>Assigned nodes</h3><div class="sub">Battery slot availability</div></div>
+              <button class="btn-sm" onclick="setView('battery', document.querySelector('#nav-operator [data-view=battery]'))">Update slots</button>
+            </div>
+            <div class="panel-body">
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Kilinochchi-North</div></div>
+                <div class="node-cap"><div class="kw">42.5 kW/h</div><div class="slots">6/8 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Jaffna-Hub-2</div></div>
+                <div class="node-cap"><div class="kw">30.0 kW/h</div><div class="slots">2/6 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Vavuniya-East</div></div>
+                <div class="node-cap"><div class="kw">55.0 kW/h</div><div class="slots">8/10 slots free</div></div>
+              </div>
+              <div class="node-list-item">
+                <div class="node-info"><div class="name">Mannar-Coastal</div></div>
+                <div class="node-cap"><div class="kw">18.0 kW/h</div><div class="slots">0/4 slots free</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div><h3>Verify prosumer QR</h3><div class="sub">Scan, confirm against server, finalize energy transfer</div></div>
+            <button class="btn-add" onclick="setView('qr', document.querySelector('#nav-operator [data-view=qr]'))">Open scanner</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== PROSUMERS ===== -->
+      <div class="view-panel" id="view-prosumers">
+        <div class="toolbar">
+          <input class="search-input" placeholder="Search by NIC or name…">
+          <div style="display:flex; gap:10px;">
+            <div class="filter-chips">
+              <div class="chip active">All</div>
+              <div class="chip">Active</div>
+              <div class="chip">Deactivation requested</div>
+            </div>
+            <button class="btn-add">+ New Prosumer</button>
+          </div>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>NIC (primary key)</th><th>Name</th><th>Registered</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">200015702134</td><td>H. Fernando</td><td class="mono">2026-03-11</td><td><span class="badge ok">active</span></td>
+                <td class="row-actions"><button class="btn-sm">Edit</button><button class="btn-sm danger">Deactivate</button></td></tr>
+              <tr><td class="mono">198845102981</td><td>N. Silva</td><td class="mono">2026-01-22</td><td><span class="badge ok">active</span></td>
+                <td class="row-actions"><button class="btn-sm">Edit</button><button class="btn-sm danger">Deactivate</button></td></tr>
+              <tr><td class="mono">970123456V</td><td>R. Kumar</td><td class="mono">2026-05-02</td><td><span class="badge pending">deactivation requested</span></td>
+                <td class="row-actions"><button class="btn-sm accent">Review</button><button class="btn-sm">Edit</button></td></tr>
+              <tr><td class="mono">915330218V</td><td>S. Jayasuriya</td><td class="mono">2025-11-30</td><td><span class="badge off">deactivated</span></td>
+                <td class="row-actions"><button class="btn-sm accent">Reactivate</button></td></tr>
+              <tr><td class="mono">200233104521</td><td>D. Wickrama</td><td class="mono">2026-06-14</td><td><span class="badge ok">active</span></td>
+                <td class="row-actions"><button class="btn-sm">Edit</button><button class="btn-sm danger">Deactivate</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== NODES (Backoffice only — create, schedule, deactivate) ===== -->
+      <div class="view-panel" id="view-nodes">
+        <div class="two-col" style="grid-template-columns:1fr 1.4fr;">
+          <div class="panel">
+            <div class="panel-head"><div><h3>Register microgrid node</h3><div class="sub">GPS, capacity &amp; battery slots</div></div></div>
+            <div class="panel-body pad">
+              <div class="form-grid">
+                <div class="form-field"><label>Node name</label><input placeholder="e.g. Kilinochchi-North"></div>
+                <div class="form-field"><label>Capacity (kW/h)</label><input placeholder="42.5"></div>
+                <div class="form-field"><label>Latitude</label><input placeholder="9.3961"></div>
+                <div class="form-field"><label>Longitude</label><input placeholder="80.3986"></div>
+                <div class="form-field full"><label>Battery slots</label><input placeholder="8"></div>
+                <div class="form-field full"><label>Operating schedule</label><input placeholder="06:00 – 22:00 daily"></div>
+              </div>
+              <button class="btn-add" style="width:100%;">Create node</button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head">
+              <div><h3>Registered nodes</h3><div class="sub">Deactivation is blocked while reservations are active</div></div>
+            </div>
+            <div class="panel-body">
+              <table>
+                <thead><tr><th>Node</th><th>Capacity</th><th>Slots</th><th>Status</th><th></th></tr></thead>
+                <tbody>
+                  <tr><td>Kilinochchi-North</td><td class="mono">42.5 kW/h</td><td class="mono">6/8 free</td><td><span class="badge ok">active</span></td>
+                    <td class="row-actions"><button class="btn-sm">Schedule</button><button class="btn-sm danger" title="Blocked — active reservations exist">Deactivate</button></td></tr>
+                  <tr><td>Jaffna-Hub-2</td><td class="mono">30.0 kW/h</td><td class="mono">2/6 free</td><td><span class="badge ok">active</span></td>
+                    <td class="row-actions"><button class="btn-sm">Schedule</button><button class="btn-sm danger">Deactivate</button></td></tr>
+                  <tr><td>Vavuniya-East</td><td class="mono">55.0 kW/h</td><td class="mono">8/10 free</td><td><span class="badge ok">active</span></td>
+                    <td class="row-actions"><button class="btn-sm">Schedule</button><button class="btn-sm danger">Deactivate</button></td></tr>
+                  <tr><td>Mannar-Coastal</td><td class="mono">18.0 kW/h</td><td class="mono">0/4 free</td><td><span class="badge ok">active</span></td>
+                    <td class="row-actions"><button class="btn-sm">Schedule</button><button class="btn-sm danger">Deactivate</button></td></tr>
+                  <tr><td>Mullaitivu-South</td><td class="mono">12.0 kW/h</td><td class="mono">3/3 free</td><td><span class="badge off">inactive</span></td>
+                    <td class="row-actions"><button class="btn-sm accent">Reactivate</button></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BATTERY SLOTS (Grid Operator only — update availability, no create/deactivate) ===== -->
+      <div class="view-panel" id="view-battery">
+        <div class="rule-note">
+          🔋 <div>Grid Operators can update <b>battery slot availability</b> on assigned nodes. Creating or deactivating a node is a Backoffice-only action.</div>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div><h3>Assigned nodes — battery slot availability</h3><div class="sub">Update free/occupied slots as bookings are serviced</div></div>
+          </div>
+          <div class="panel-body">
+            <table>
+              <thead><tr><th>Node</th><th>Capacity</th><th>Slots</th><th>Availability</th><th></th></tr></thead>
+              <tbody>
+                <tr><td>Kilinochchi-North</td><td class="mono">42.5 kW/h</td><td class="mono">6/8 free</td><td><span class="badge ok">active</span></td>
+                  <td class="row-actions"><button class="btn-sm accent">Update slots</button></td></tr>
+                <tr><td>Jaffna-Hub-2</td><td class="mono">30.0 kW/h</td><td class="mono">2/6 free</td><td><span class="badge ok">active</span></td>
+                  <td class="row-actions"><button class="btn-sm accent">Update slots</button></td></tr>
+                <tr><td>Vavuniya-East</td><td class="mono">55.0 kW/h</td><td class="mono">8/10 free</td><td><span class="badge ok">active</span></td>
+                  <td class="row-actions"><button class="btn-sm accent">Update slots</button></td></tr>
+                <tr><td>Mannar-Coastal</td><td class="mono">18.0 kW/h</td><td class="mono">0/4 free</td><td><span class="badge ok">active</span></td>
+                  <td class="row-actions"><button class="btn-sm accent">Update slots</button></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== WEB USERS ===== -->
+      <div class="view-panel" id="view-webusers">
+        <div class="toolbar">
+          <div></div>
+          <button class="btn-add">+ Create web user</button>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>Username</th><th>Role</th><th>Created by</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">a.perera</td><td><span class="badge ok">Backoffice</span></td><td>system</td><td><span class="badge ok">active</span></td><td class="row-actions"><button class="btn-sm">Edit</button></td></tr>
+              <tr><td class="mono">m.rajan</td><td><span class="badge pending">Grid Operator</span></td><td>a.perera</td><td><span class="badge ok">active</span></td><td class="row-actions"><button class="btn-sm">Edit</button><button class="btn-sm danger">Disable</button></td></tr>
+              <tr><td class="mono">t.nadarajah</td><td><span class="badge pending">Grid Operator</span></td><td>a.perera</td><td><span class="badge ok">active</span></td><td class="row-actions"><button class="btn-sm">Edit</button><button class="btn-sm danger">Disable</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== RESERVATIONS (Backoffice — oversight, can approve/cancel) ===== -->
+      <div class="view-panel" id="view-reservations">
+        <div class="rule-note">
+          ⏱ <div><b>Scheduling rule:</b> new reservations must fall within the next 7 days. <b>Modification rule:</b> updates or cancellations require at least 12 hours' notice.</div>
+        </div>
+        <div class="toolbar">
+          <input class="search-input" placeholder="Search by NIC or node…">
+          <div class="filter-chips">
+            <div class="chip active">All</div>
+            <div class="chip">Pending</div>
+            <div class="chip">Approved</div>
+            <div class="chip">Within 12h</div>
+          </div>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>Reservation</th><th>Prosumer</th><th>Node</th><th>Scheduled</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">RSV-10231</td><td>H. Fernando</td><td>Kilinochchi-North</td><td class="mono">Sep 21, 14:00</td><td><span class="badge pending">pending</span></td>
+                <td class="row-actions"><button class="btn-sm accent">Approve</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10232</td><td>N. Silva</td><td>Jaffna-Hub-2</td><td class="mono">Sep 20, 09:30</td><td><span class="badge pending">pending</span></td>
+                <td class="row-actions"><button class="btn-sm accent">Approve</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10218</td><td>R. Kumar</td><td>Vavuniya-East</td><td class="mono">Sep 22, 16:00</td><td><span class="badge ok">approved</span></td>
+                <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10209</td><td>S. Jayasuriya</td><td>Kilinochchi-North</td><td class="mono">Sep 19, 11:00</td><td><span class="badge danger">&lt;12h — locked</span></td>
+                <td class="row-actions"><button class="btn-sm" disabled style="opacity:.4;">Modify</button></td></tr>
+              <tr><td class="mono">RSV-10190</td><td>D. Wickrama</td><td>Mannar-Coastal</td><td class="mono">Sep 18, 20:00</td><td><span class="badge off">completed</span></td>
+                <td class="row-actions"><button class="btn-sm">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== RESERVATIONS (Grid Operator — Create/Modify/Cancel, rule-validated, no Approve) ===== -->
+      <div class="view-panel" id="view-reservations-op">
+        <div class="rule-note">
+          ⏱ <div><b>Scheduling rule:</b> new reservations must fall within the next 7 days. <b>Modification rule:</b> updates or cancellations require at least 12 hours' notice.</div>
+        </div>
+        <div class="toolbar">
+          <input class="search-input" placeholder="Search by NIC or node…">
+          <div style="display:flex; gap:10px;">
+            <div class="filter-chips">
+              <div class="chip active">All</div>
+              <div class="chip">Pending</div>
+              <div class="chip">Approved</div>
+              <div class="chip">Within 12h</div>
+            </div>
+            <button class="btn-add">+ Create Reservation</button>
+          </div>
+        </div>
+        <div class="panel">
+          <table>
+            <thead><tr><th>Reservation</th><th>Prosumer</th><th>Node</th><th>Scheduled</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td class="mono">RSV-10231</td><td>H. Fernando</td><td>Kilinochchi-North</td><td class="mono">Sep 21, 14:00</td><td><span class="badge pending">pending</span></td>
+                <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10232</td><td>N. Silva</td><td>Jaffna-Hub-2</td><td class="mono">Sep 20, 09:30</td><td><span class="badge pending">pending</span></td>
+                <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10218</td><td>R. Kumar</td><td>Vavuniya-East</td><td class="mono">Sep 22, 16:00</td><td><span class="badge ok">approved</span></td>
+                <td class="row-actions"><button class="btn-sm">Modify</button><button class="btn-sm danger">Cancel</button></td></tr>
+              <tr><td class="mono">RSV-10209</td><td>S. Jayasuriya</td><td>Kilinochchi-North</td><td class="mono">Sep 19, 11:00</td><td><span class="badge danger">&lt;12h — locked</span></td>
+                <td class="row-actions"><button class="btn-sm" disabled style="opacity:.4;">Modify</button></td></tr>
+              <tr><td class="mono">RSV-10190</td><td>D. Wickrama</td><td>Mannar-Coastal</td><td class="mono">Sep 18, 20:00</td><td><span class="badge off">completed</span></td>
+                <td class="row-actions"><button class="btn-sm">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== QR VERIFY (operator) ===== -->
+      <div class="view-panel" id="view-qr">
+        <div class="two-col">
+          <div class="panel">
+            <div class="panel-head"><div><h3>Scan prosumer QR</h3><div class="sub">Verify against server, then finalize transfer</div></div></div>
+            <div class="panel-body pad">
+              <div class="scan-frame">
+                <div class="qr-mock"></div>
+                Point device camera at the prosumer's transaction QR code
+              </div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><h3>Verified reservation</h3><div class="sub">RSV-10218 · matched against server record</div></div></div>
+            <div class="panel-body pad">
+              <table style="margin-bottom:16px;">
+                <tbody>
+                  <tr><td style="padding-left:0; color:var(--text-muted);">Prosumer</td><td class="mono">R. Kumar · 970123456V</td></tr>
+                  <tr><td style="padding-left:0; color:var(--text-muted);">Node</td><td>Vavuniya-East</td></tr>
+                  <tr><td style="padding-left:0; color:var(--text-muted);">Slot</td><td class="mono">Sep 22, 16:00 – 17:00</td></tr>
+                  <tr><td style="padding-left:0; color:var(--text-muted);">QR generated</td><td class="mono">Sep 22, 15:41</td></tr>
+                  <tr><td style="padding-left:0; color:var(--text-muted); border-bottom:none;">Signature</td><td class="mono" style="border-bottom:none;"><span class="badge ok">valid</span></td></tr>
+                </tbody>
+              </table>
+              <button class="btn-add" style="width:100%;">Finalize energy transfer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentRole = 'backoffice';
+
+  function setLoginRole(btn, role){
+    currentRole = role;
+    document.querySelectorAll('.role-switch button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('login-user').value = role === 'backoffice' ? 'a.perera' : 'm.rajan';
+  }
+
+  function doLogin(){
+    document.getElementById('login-view').style.display = 'none';
+    document.getElementById('app-view').classList.add('show');
+    document.getElementById('nav-backoffice').style.display = currentRole==='backoffice' ? 'block':'none';
+    document.getElementById('nav-operator').style.display = currentRole==='operator' ? 'block':'none';
+
+    if(currentRole==='operator'){
+      document.getElementById('avatar-init').textContent = 'MR';
+      document.getElementById('chip-name').textContent = 'M. Rajan';
+      document.getElementById('chip-role').textContent = 'grid operator';
+      setView('dash-op', document.querySelector('#nav-operator [data-view=dash-op]'));
+    } else {
+      document.getElementById('avatar-init').textContent = 'AP';
+      document.getElementById('chip-name').textContent = 'A. Perera';
+      document.getElementById('chip-role').textContent = 'backoffice';
+      setView('dash', document.querySelector('#nav-backoffice [data-view=dash]'));
+    }
+  }
+
+  function doLogout(){
+    document.getElementById('app-view').classList.remove('show');
+    document.getElementById('login-view').style.display = 'flex';
+  }
+
+  const titles = {
+    dash:['Dashboard','overview'],
+    'dash-op':['Dashboard','field ops / overview'],
+    prosumers:['Prosumers','administration / prosumers'],
+    nodes:['Microgrid Nodes','administration / nodes'],
+    battery:['Battery Slots','field ops / battery-slots'],
+    webusers:['Web Users','administration / users'],
+    reservations:['Reservations','operations / reservations'],
+    'reservations-op':['Reservations','field ops / reservations'],
+    qr:['Verify QR & Finalize','field ops / qr-verify']
+  };
+
+  function setView(view, el){
+    document.querySelectorAll('.view-panel').forEach(v=>v.classList.remove('active'));
+    document.getElementById('view-'+view).classList.add('active');
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    if(el) el.classList.add('active');
+    document.getElementById('topbar-title').textContent = titles[view][0];
+    document.getElementById('topbar-crumb').textContent = 'solara-grid / ' + titles[view][1];
+  }
+</script>
+</body>
+</html>
