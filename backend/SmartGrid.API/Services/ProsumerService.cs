@@ -94,7 +94,10 @@ namespace SmartGrid.API.Services
         // Toggles the IsActive status (used for deactivate/reactivate).
         public async Task<bool> SetActiveStatusAsync(string nic, bool isActive)
         {
-            var update = Builders<User>.Update.Set(p => p.IsActive, isActive);
+            var update = Builders<User>.Update
+                .Set(p => p.IsActive, isActive)
+                .Set(nameof(Prosumer.DeactivationRequested), false); // Clear the request flag!
+
             var result = await _usersCollection.UpdateOneAsync(
                 Builders<User>.Filter.OfType<Prosumer>(p => p.Nic == nic), 
                 update);
@@ -115,6 +118,38 @@ namespace SmartGrid.API.Services
                 DeactivationRequested = prosumer.DeactivationRequested,
                 Role = prosumer.Role.ToString()
             };
+        }
+
+        // 2. GET ALL PROSUMERS
+        public async Task<List<ProsumerResponseDto>> GetAllProsumersAsync()
+        {
+            var filter = Builders<User>.Filter.Eq(u => u.Role, UserRole.Prosumer);
+            var prosumers = await _usersCollection.Find(filter).ToListAsync();
+
+            var responseList = new List<ProsumerResponseDto>();
+            foreach (var user in prosumers)
+            {
+                responseList.Add(MapToResponseDto((Prosumer)user));
+            }
+            return responseList;
+        }
+
+        // 3. GET DEACTIVATION REQUESTS
+        public async Task<List<ProsumerResponseDto>> GetDeactivationRequestsAsync()
+        {
+            var filter = Builders<User>.Filter.And(
+                Builders<User>.Filter.Eq(u => u.Role, UserRole.Prosumer),
+                Builders<User>.Filter.Eq(u => ((Prosumer)u).DeactivationRequested, true)
+            );
+            
+            var prosumers = await _usersCollection.Find(filter).ToListAsync();
+
+            var responseList = new List<ProsumerResponseDto>();
+            foreach (var user in prosumers)
+            {
+                responseList.Add(MapToResponseDto((Prosumer)user));
+            }
+            return responseList;
         }
     }
 }
