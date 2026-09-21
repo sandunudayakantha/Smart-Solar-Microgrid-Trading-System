@@ -29,16 +29,29 @@ axiosClient.interceptors.response.use(
     return response;
   },
   (error) => {
-    // If the FAT Backend rejects the request due to missing/expired token or invalid role
-    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+    const originalRequest = error.config;
+    
+    // Ignore 401s from the login endpoint itself so the UI can show the error message!
+    if (originalRequest && originalRequest.url && originalRequest.url.includes('/auth/login')) {
+      return Promise.reject(error);
+    }
+
+    // If the FAT Backend rejects the request due to missing/expired token
+    if (error.response && error.response.status === 401) {
       // Clear invalid credentials
       localStorage.removeItem('token');
       localStorage.removeItem('userRole');
       localStorage.removeItem('userName');
+      localStorage.removeItem('menu');
       
-      // Force redirect to login page (Thin Client reacting to backend security)
+      // Force redirect to login page
       window.location.href = '/login';
     }
+    
+    // We intentionally ignore 403 Forbidden here! 
+    // If a user gets a 403, we just pass the error to the React Component
+    // so it can display a red "Access Denied" message instead of logging them out!
+
     return Promise.reject(error);
   }
 );

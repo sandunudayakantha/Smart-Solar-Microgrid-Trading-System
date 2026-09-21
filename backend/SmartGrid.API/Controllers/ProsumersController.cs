@@ -107,7 +107,7 @@ namespace SmartGrid.API.Controllers
 
         // 2. GET ALL PROSUMERS
         [HttpGet]
-        [Authorize(Roles = "BackOfficeUser,GridOperator")]
+        [Authorize(Roles = "BackOfficeUser")]
         public async Task<IActionResult> GetAllProsumers()
         {
             var prosumers = await _prosumerService.GetAllProsumersAsync();
