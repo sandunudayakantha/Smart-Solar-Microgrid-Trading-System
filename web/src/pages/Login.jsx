@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { authService } from '../api/authService';
 
 export default function Login() {
@@ -8,6 +9,8 @@ export default function Login() {
   // States for API feedback
   const [errorMsg, setErrorMsg] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   // 2. Form Submission Handler
   const handleLogin = async (e) => {
@@ -19,14 +22,17 @@ export default function Login() {
       // Call the C# Backend
       const data = await authService.login(emailOrNic, password);
       
-      // If success, save the JWT token
+      // If success, save the JWT token and user info from the DTO
       localStorage.setItem('token', data.token);
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('userName', data.name);
       
-      // Tell the user it worked!
-      alert(`Login Successful! Welcome ${data.user.name}. Role: ${data.user.role}`);
+      // Navigate to the admin dashboard
+      navigate('/admin/prosumers');
       
     } catch (error) {
-      setErrorMsg(error);
+      // Ensure we always set a string for React to render
+      setErrorMsg(error?.response?.data?.message || error.message || String(error));
     } finally {
       setIsLoading(false);
     }

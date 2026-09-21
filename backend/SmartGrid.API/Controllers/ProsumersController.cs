@@ -86,7 +86,7 @@ namespace SmartGrid.API.Controllers
         // PATCH /api/prosumers/{nic}/deactivate
         // Deactivates a prosumer account (Grid Operator action).
         [HttpPatch("{nic}/deactivate")]
-        [Authorize(Roles = "BackOfficeUser,GridOperator")]
+        [Authorize(Roles = "BackOfficeUser")]
         public async Task<IActionResult> Deactivate(string nic)
         {
             var success = await _prosumerService.SetActiveStatusAsync(nic, false);

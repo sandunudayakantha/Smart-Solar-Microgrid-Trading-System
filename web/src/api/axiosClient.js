@@ -23,4 +23,24 @@ axiosClient.interceptors.request.use(
   }
 );
 
+// Response Interceptor: Catch 401 (Unauthorized) and 403 (Forbidden) globally
+axiosClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // If the FAT Backend rejects the request due to missing/expired token or invalid role
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      // Clear invalid credentials
+      localStorage.removeItem('token');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('userName');
+      
+      // Force redirect to login page (Thin Client reacting to backend security)
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default axiosClient;

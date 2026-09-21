@@ -9,7 +9,8 @@ export const authService = {
         emailOrNic: emailOrNic,
         password: password
       });
-      return response.data;
+      // Extract the actual payload from the { success: true, data: {...} } wrapper
+      return response.data.data;
     } catch (error) {
       // Pass the error message from the C# backend to the frontend
       throw error.response?.data?.message || 'Failed to connect to server';
