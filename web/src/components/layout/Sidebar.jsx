@@ -1,7 +1,9 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 export default function Sidebar() {
+  const navigate = useNavigate();
+
   // 1. FAT Backend: Get the authorized menu from localStorage
   const menuItems = JSON.parse(localStorage.getItem('menu') || '[]');
 
@@ -35,6 +37,14 @@ export default function Sidebar() {
   const userName = localStorage.getItem('userName') || 'User';
   const userRole = localStorage.getItem('userRole') || 'Role';
   const initial = userName.charAt(0).toUpperCase();
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('menu');
+    navigate('/login');
+  };
 
   return (
     <aside className="w-60 bg-slate-900 border-r border-slate-800 flex flex-col h-screen sticky top-0 shrink-0">
@@ -71,10 +81,21 @@ export default function Sidebar() {
           <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-semibold text-teal-400">
             {initial}
           </div>
-          <div className="leading-tight truncate">
+          <div className="leading-tight truncate flex-1">
             <div className="text-sm font-medium text-white truncate">{userName}</div>
             <div className="text-[10px] text-slate-500 font-mono truncate">{userRole}</div>
           </div>
+          <button 
+            onClick={handleLogout}
+            title="Log Out"
+            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors ml-auto"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+          </button>
         </div>
       </div>
 
