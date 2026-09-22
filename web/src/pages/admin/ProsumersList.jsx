@@ -6,6 +6,15 @@ export default function ProsumersList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [modalError, setModalError] = useState(null);
+  const [editingNic, setEditingNic] = useState(null);
+  const [formData, setFormData] = useState({
+    nic: '', name: '', email: '', phone: '', address: '', password: ''
+  });
+
   useEffect(() => {
     fetchProsumers();
   }, []);
@@ -37,6 +46,32 @@ export default function ProsumersList() {
     }
   };
 
+  const handleEditClick = (p) => {
+    setEditingNic(p.nic);
+    setFormData({ nic: p.nic, name: p.name, email: p.email, phone: p.phone, address: p.address, password: '' });
+    setIsModalOpen(true);
+  };
+
+  const handleCreateSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setModalError(null);
+    try {
+      if (editingNic) {
+        await prosumerService.update(editingNic, formData);
+      } else {
+        await prosumerService.register(formData);
+      }
+      setIsModalOpen(false);
+      setFormData({ nic: '', name: '', email: '', phone: '', address: '', password: '' });
+      fetchProsumers(); // Refresh table
+    } catch (err) {
+      setModalError(err.response?.data?.message || err.message || `Failed to ${editingNic ? 'update' : 'register'} prosumer.`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl">
       
@@ -53,7 +88,14 @@ export default function ProsumersList() {
 
       {/* Toolbar simplified to only what backend supports (Create) */}
       <div className="flex items-center justify-end mb-5">
-        <button className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition-colors">
+        <button 
+          onClick={() => {
+            setEditingNic(null);
+            setFormData({ nic: '', name: '', email: '', phone: '', address: '', password: '' });
+            setIsModalOpen(true);
+          }}
+          className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-4 py-2 rounded-lg text-sm transition-colors"
+        >
           + Register Prosumer
         </button>
       </div>
@@ -118,12 +160,20 @@ export default function ProsumersList() {
                       </button>
                     )}
                     {p.isActive && !p.deactivationRequested && (
-                      <button 
-                        onClick={() => handleStatusToggle(p.nic, 'deactivate')}
-                        className="px-2 py-1 border border-red-500/30 text-red-400 rounded text-[10px] hover:bg-red-500/10"
-                      >
-                        Deactivate
-                      </button>
+                      <>
+                        <button 
+                          onClick={() => handleEditClick(p)}
+                          className="px-2 py-1 border border-blue-500/30 text-blue-400 rounded text-[10px] hover:bg-blue-500/10"
+                        >
+                          Edit
+                        </button>
+                        <button 
+                          onClick={() => handleStatusToggle(p.nic, 'deactivate')}
+                          className="px-2 py-1 border border-red-500/30 text-red-400 rounded text-[10px] hover:bg-red-500/10"
+                        >
+                          Deactivate
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>
@@ -149,6 +199,63 @@ export default function ProsumersList() {
           </div>
         )}
       </div>
+
+      {/* Minimal Glassmorphic Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-700 w-full max-w-md rounded-2xl shadow-2xl p-6 relative">
+            <h2 className="text-xl font-semibold text-white mb-4">{editingNic ? 'Edit Prosumer' : 'Register Prosumer'}</h2>
+            
+            {modalError && <div className="mb-4 text-xs bg-red-500/10 text-red-500 p-2 rounded border border-red-500/20">{modalError}</div>}
+            
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                {!editingNic && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">NIC</label>
+                    <input required type="text" value={formData.nic} onChange={e => setFormData({...formData, nic: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+                  </div>
+                )}
+                <div className={editingNic ? "col-span-2" : ""}>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Name</label>
+                  <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                {!editingNic && (
+                  <div>
+                    <label className="block text-xs font-medium text-slate-400 mb-1">Email</label>
+                    <input required type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+                  </div>
+                )}
+                <div className={editingNic ? "col-span-2" : ""}>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Phone</label>
+                  <input required type="text" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Address</label>
+                <input required type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+              </div>
+              {!editingNic && (
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Password</label>
+                  <input required type="password" value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} className="w-full bg-slate-800/50 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:border-amber-500 focus:outline-none transition-colors" />
+                </div>
+              )}
+              
+              <div className="pt-4 flex justify-end gap-3 border-t border-slate-800">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm text-slate-400 hover:text-white transition-colors">Cancel</button>
+                <button type="submit" disabled={isSubmitting} className="bg-amber-500 hover:bg-amber-400 text-slate-950 font-semibold px-5 py-2 rounded-lg text-sm transition-colors disabled:opacity-50">
+                  {editingNic 
+                    ? (isSubmitting ? 'Saving...' : 'Save Changes') 
+                    : (isSubmitting ? 'Registering...' : 'Register')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
     </div>
   );
